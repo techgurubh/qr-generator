@@ -1,1 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QR Code Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
+<div class="app">
+  <h1>QR Code Generator</h1>
+
+  <textarea id="qrText" placeholder="Enter text or URL"></textarea>
+
+  <div class="row">
+    <select id="qrStyle">
+      <option value="square">Classic Square</option>
+      <option value="rounded">Rounded</option>
+      <option value="dots">Circle Dots</option>
+      <option value="diamond">Diamond / Egg</option>
+      <option value="fancy">Fancy</option>
+    </select>
+
+    <select id="qrColor">
+      <option value="#000000">Black</option>
+      <option value="#2563eb">Blue</option>
+      <option value="#7c3aed">Purple</option>
+      <option value="#16a34a">Green</option>
+    </select>
+
+    <select id="bgColor">
+      <option value="#ffffff">White</option>
+      <option value="#e0f2fe">Sky Blue</option>
+      <option value="#f3e8ff">Light Purple</option>
+      <option value="transparent">Transparent</option>
+    </select>
+  </div>
+
+  <label class="logo-upload">
+    Upload Logo (optional)
+    <input type="file" id="logoInput" accept="image/*">
+  </label>
+
+  <button id="generateBtn">Generate QR</button>
+
+  <div class="preview">
+    <canvas id="qrCanvas" width="300" height="300"></canvas>
+  </div>
+
+  <div class="actions">
+    <button id="copyBtn">Copy Text</button>
+    <button id="openBtn">Open Link</button>
+    <button id="downloadBtn">Download QR</button>
+  </div>
+
+  <p id="message"></p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
