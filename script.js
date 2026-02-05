@@ -3,6 +3,9 @@ const canvas = document.getElementById("qrCanvas");
 const ctx = canvas.getContext("2d");
 const msg = document.getElementById("message");
 
+const QR_SIZE = 300;
+const QUIET_ZONE = 16; // mandatory white border
+
 let logoImg = null;
 
 document.getElementById("logoInput").addEventListener("change", e => {
@@ -14,10 +17,13 @@ document.getElementById("logoInput").addEventListener("change", e => {
 });
 
 document.getElementById("generateBtn").onclick = generateQR;
-document.getElementById("copyBtn").onclick = () => navigator.clipboard.writeText(textEl.value);
+document.getElementById("copyBtn").onclick = () =>
+  navigator.clipboard.writeText(textEl.value);
+
 document.getElementById("openBtn").onclick = () => {
   if (isValidURL(textEl.value)) window.open(textEl.value, "_blank");
 };
+
 document.getElementById("downloadBtn").onclick = downloadQR;
 
 function generateQR() {
@@ -26,32 +32,39 @@ function generateQR() {
     msg.textContent = "Please enter text or URL";
     return;
   }
-
   msg.textContent = "";
 
   const qr = qrcode(0, "H");
   qr.addData(text);
   qr.make();
 
-  const size = 300;
   const cells = qr.getModuleCount();
-  const cellSize = size / cells;
+  const cellSize = (QR_SIZE - QUIET_ZONE * 2) / cells;
 
   const fg = document.getElementById("qrColor").value;
   const bg = document.getElementById("bgColor").value;
 
-  ctx.clearRect(0, 0, size, size);
+  ctx.clearRect(0, 0, QR_SIZE, QR_SIZE);
+
   if (bg !== "transparent") {
     ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, size, size);
+    ctx.fillRect(0, 0, QR_SIZE, QR_SIZE);
   }
 
   ctx.fillStyle = fg;
 
   for (let r = 0; r < cells; r++) {
     for (let c = 0; c < cells; c++) {
-      if (qr.isDark(r, c)) {
-        drawDot(r, c, cellSize);
+      if (!qr.isDark(r, c)) continue;
+
+      const x = QUIET_ZONE + c * cellSize;
+      const y = QUIET_ZONE + r * cellSize;
+
+      // Finder patterns must stay square
+      if (isFinderPattern(r, c, cells)) {
+        ctx.fillRect(x, y, cellSize, cellSize);
+      } else {
+        drawDot(x, y, cellSize);
       }
     }
   }
@@ -59,12 +72,10 @@ function generateQR() {
   if (logoImg) drawLogo();
 }
 
-function drawDot(r, c, s) {
+function drawDot(x, y, s) {
   const style = document.getElementById("qrStyle").value;
-  const x = c * s;
-  const y = r * s;
-
   ctx.beginPath();
+
   if (style === "square") {
     ctx.fillRect(x, y, s, s);
   } else if (style === "rounded") {
@@ -77,12 +88,25 @@ function drawDot(r, c, s) {
 }
 
 function drawLogo() {
-  const size = 60;
-  const x = (300 - size) / 2;
-  const y = (300 - size) / 2;
-  ctx.fillStyle = "white";
-  ctx.fillRect(x - 5, y - 5, size + 10, size + 10);
+  const size = 45; // SAFE logo size (~15%)
+  const x = (QR_SIZE - size) / 2;
+  const y = (QR_SIZE - size) / 2;
+
+  // White background for contrast
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.roundRect(x - 6, y - 6, size + 12, size + 12, 8);
+  ctx.fill();
+
   ctx.drawImage(logoImg, x, y, size, size);
+}
+
+function isFinderPattern(r, c, count) {
+  return (
+    (r < 7 && c < 7) ||
+    (r < 7 && c > count - 8) ||
+    (r > count - 8 && c < 7)
+  );
 }
 
 function isValidURL(url) {
@@ -97,6 +121,6 @@ function isValidURL(url) {
 function downloadQR() {
   const link = document.createElement("a");
   link.download = "qr-code.png";
-  link.href = canvas.toDataURL();
+  link.href = canvas.toDataURL("image/png");
   link.click();
 }
